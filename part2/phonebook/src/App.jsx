@@ -7,122 +7,141 @@ import Notification from './components/Notifications'
 import Error from './components/Error'
 
 const App = () => {
-    const [persons, setPersons] = useState([])
+  const [persons, setPersons] = useState([])
 
-    const [newName, setNewName] = useState('')
-    const [newNumber, setNewNumber] = useState('')
-    const [searchString, setSearchString] = useState('')
-    const [notification, setNotification] = useState(null)
-    const [error, setError] = useState(null)
+  const [newName, setNewName] = useState('')
+  const [newNumber, setNewNumber] = useState('')
+  const [searchString, setSearchString] = useState('')
+  const [notification, setNotification] = useState(null)
+  const [error, setError] = useState(null)
 
-    useEffect(() => {
+  useEffect(() => {
+    personService
+      .getAll()
+      .then(initialPersons => {
+        setPersons(initialPersons)
+      })
+  }, [])
+
+  const addPerson = (e) => {
+    e.preventDefault()
+
+    if (!(newName && newNumber)) {
+      setError("Name or Number missing")
+      setTimeout(() => {
+        setError(null)
+      }, 5000)
+
+      return
+    }
+
+    const person = persons.find(person => person.name === newName)
+
+    if (person) {
+      if (confirm(`${newName} has already been added. Replace old number with new one?`)) {
+        const changedPerson = { ...person, number: newNumber }
+
         personService
-            .getAll()
-            .then(initialPersons => {
-                setPersons(initialPersons)
-            })
-    }, [])
+          .update(person.id, changedPerson)
+          .then(returnedPerson => {
+            if (returnedPerson) {
 
-    const addPerson = (e) => {
-        e.preventDefault()
-        const person = persons.find(person => person.name === newName)
+              setPersons(persons.map(p => p.id !== person.id ? p : returnedPerson))
+              setNewName('')
+              setNewNumber('')
 
-        if (person) {
-            if (confirm(`${newName} has already been added. Replace old number with new one?`)) {
-                const changedPerson = { ...person, number: newNumber }
-
-                personService
-                    .update(person.id, changedPerson)
-                    .then(returnedPerson => {
-                        setPersons(persons.map(p => p.id !== person.id ? p : returnedPerson))
-                        setNewName('')
-                        setNewNumber('')
-
-                        setNotification(`Changed the number of ${person.name}`)
-                        setTimeout(() => {
-                            setNotification(null)
-                        }, 5000)
-                    })
-                    .catch(error => {
-                        setError("Can't change number, person has already been removed from server")
-                        setPersons(persons.filter(p => p.id !== changedPerson.id))
-                        setTimeout(() => {
-                            setError(null)
-                        }, 5000)
-                    })
+              setNotification(`Changed the number of ${person.name}`)
+              setTimeout(() => {
+                setNotification(null)
+              }, 5000)
+            } else {
+              setPersons(persons.filter(p => p.id !== changedPerson.id))
+              setError("Couldn't update person, person has already been removed from server")
+              setTimeout(() => {
+                setError(null)
+              }, 5000)
             }
-        }
-        else {
-            const personObject = { name: newName, number: newNumber }
-
-            personService
-                .create(personObject)
-                .then(returnedPerson => {
-                    setPersons(persons.concat(returnedPerson))
-                    setNewName('')
-                    setNewNumber('')
-                    setNotification(`Added ${returnedPerson.name}`)
-                    setTimeout(() => {
-                        setNotification(null)
-                    }, 5000)
-                })
-                .catch(error => {
-                    setError("Couldn't add person")
-                    setTimeout(() => {
-                        setError(null)
-                    }, 5000)
-                })
-        }
+          })
+          .catch(error => {
+            console.log(error);
+            setError(error.response.data.error)
+            setTimeout(() => {
+              setError(null)
+            }, 5000)
+          })
+      }
     }
+    else {
+      const personObject = { name: newName, number: newNumber }
 
-    const deletePerson = (person) => {
-        if (confirm(`Delete ${person.name}?`)) {
-            personService
-                .del(person.id)
-                .then(arg => {
-                    setPersons(persons.filter(p => p.id !== person.id))
-                    setNotification(`Deleted ${person.name}`)
-                    setTimeout(() => {
-                        setNotification(null)
-                    }, 5000)
-                })
-                .catch(err => {
-                    setError("Couldn't delete person")
-                    setTimeout(() => {
-                        setError(null)
-                    }, 5000)
-                })
-
-        }
+      personService
+        .create(personObject)
+        .then(returnedPerson => {
+          setPersons(persons.concat(returnedPerson))
+          setNewName('')
+          setNewNumber('')
+          setNotification(`Added ${returnedPerson.name}`)
+          setTimeout(() => {
+            setNotification(null)
+          }, 5000)
+        })
+        .catch(error => {
+          setError(error.response.data.error)
+          setTimeout(() => {
+            setError(null)
+          }, 5000)
+        })
     }
+  }
 
-    const handleNameChange = (e) => {
-        setNewName(e.target.value)
+  const deletePerson = (person) => {
+    if (confirm(`Delete ${person.name}?`)) {
+      personService
+        .del(person.id)
+        .then(_res => {
+          setPersons(persons.filter(p => p.id !== person.id))
+          setNotification(`Deleted ${person.name}`)
+          setTimeout(() => {
+            setNotification(null)
+          }, 5000)
+        })
+        .catch(error => {
+          setError(error.response.data.error)
+          setTimeout(() => {
+            setError(null)
+          }, 5000)
+        })
+
     }
-    const handleNumberChange = (e) => {
-        setNewNumber(e.target.value)
-    }
-    const handleSearchChange = (e) => {
-        setSearchString(e.target.value)
-    }
+  }
+
+  const handleNameChange = (e) => {
+    setNewName(e.target.value)
+  }
+  const handleNumberChange = (e) => {
+    setNewNumber(e.target.value)
+  }
+  const handleSearchChange = (e) => {
+    setSearchString(e.target.value)
+  }
 
 
-    return (
-        <div>
-            <h2>Phonebook</h2>
-            <Filter value={searchString} handler={handleSearchChange} />
+  return (
+    <div>
+      <h2>Phonebook</h2>
+      <Filter value={searchString} handler={handleSearchChange} />
 
-            <h3>Add a new contact</h3>
-            <Notification message={notification} />
-            <Error message={error} />
+      <h3>Add a new person</h3>
+      <Notification message={notification} />
+      <Error message={error} />
 
-            <PersonForm name={newName} number={newNumber} handleNameChange={handleNameChange} handleNumberChange={handleNumberChange} onClick={addPerson} />
+      <PersonForm name={newName} number={newNumber} handleNameChange={handleNameChange} handleNumberChange={handleNumberChange} onClick={addPerson} />
 
-            <h3>Numbers</h3>
-            <Persons persons={persons} searchString={searchString} deletePerson={deletePerson} />
+      <h3>Numbers</h3>
+      <Persons persons={persons} searchString={searchString} deletePerson={deletePerson} />
 
-        </div>
-    )
+    </div>
+  )
 }
 
 

@@ -1,0 +1,84 @@
+GET http://localhost:3001/api/persons
+###
+GET http://localhost:3001/api/persons/655a280dd0f0737a373ffd82
+###
+DELETE http://localhost:3001/api/persons/655a280dd0f0737a373ffd82
+
+###
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+    "name": "Hehe",
+    "number": "1323-456-789"
+}
+
+###
+PUT http://localhost:3001/api/persons/655a2989a663b2325b6f05e1
+Content-Type: application/json
+
+{
+    "name": "Anna Surname",
+    "number": "123-456789"
+}
+
+###
+
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+    "name": "Heyy There"
+}
+
+###
+
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+    "number": "123-456-789"
+}
+
+###
+
+GET http://localhost:5173/api/persons
+
+###
+
+GET http://localhost:5173/api/persons/655a280dd0f0737a373ffd82
+###
+
+
+DELETE http://localhost:5173/api/persons/1
+
+###
+
+POST http://localhost:5173/api/persons
+Content-Type: application/json
+
+{
+    "name": "Hey There",
+    "number": "123-456-789"
+}
+
+###
+
+POST http://localhost:5173/api/persons
+Content-Type: application/json
+
+{
+    "name": "Heyy There"
+}
+
+###
+
+POST http://localhost:5173/api/persons
+Content-Type: application/json
+
+{
+    "number": "123-456-789"
+}
+
+###
+
