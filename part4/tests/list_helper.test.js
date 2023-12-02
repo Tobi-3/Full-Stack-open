@@ -1,5 +1,13 @@
-const listHelper = require('../utils/list_helper')
-const blogs = [
+const helper = require('../utils/list_helper')
+const mongoose = require('mongoose')
+const supertest = require('supertest')
+const app = require('../app')
+const api = supertest(app)
+const Blog = require('../models/blog')
+
+mongoose.set('bufferTimeoutMS', 30000)
+
+const initialBlogs = [
   {
     _id: "5a422a851b54a676234d17f7",
     title: "React patterns",
@@ -50,11 +58,151 @@ const blogs = [
   }
 ]
 
-test('dummy returns one', () => {
-  const blogs = []
+beforeEach(async () => {
+  await Blog.deleteMany({})
 
-  const result = listHelper.dummy(blogs)
+  const blogObjects = initialBlogs
+    .map(blog => new Blog(blog))
+  const promiseArray = blogObjects.map(blog => blog.save())
+  await Promise.all(promiseArray)
+})
+
+const blogsInDb = async () => {
+  const response = await api.get('/api/blogs')
+  return response.body
+}
+
+test('dummy returns one', () => {
+
+  const result = helper.dummy(initialBlogs)
   expect(result).toBe(1)
+})
+
+describe('blog list tests (4.9 - 4.12)', () => {
+
+  test('returns amount of blogs', async () => {
+    const blogs = await blogsInDb()
+    console.log("blogs in amount of", blogs.length, blogs)
+
+    expect(blogs).toHaveLength(initialBlogs.length)
+  })
+
+  test('unique identifier is "id"', async () => {
+    const blogs = await blogsInDb()
+
+    blogs.forEach(b => expect(b.id).toBeDefined())
+  })
+
+  test('can add a note', async () => {
+    const blogsAtStart = await blogsInDb()
+    const newBlog = {
+      title: 'It\'s ecosia',
+      author: 'Dustin',
+      url: 'https://www.ecosia.com',
+      likes: 500000,
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    const blogsAtEnd = await blogsInDb()
+    expect(blogsAtEnd).toHaveLength(blogsAtStart.length + 1)
+
+    const leastRecentlyAddedBlog = await Blog.findOne({ author: 'Dustin' })
+
+    expect(leastRecentlyAddedBlog.title).toBeDefined()
+    expect(leastRecentlyAddedBlog.author).toBeDefined()
+    expect(leastRecentlyAddedBlog.url).toBeDefined()
+    expect(leastRecentlyAddedBlog.likes).toBeDefined()
+
+  })
+
+  test('default likes to 0 if likes property is missing', async () => {
+    const blogsAtStart = await blogsInDb()
+    const newBlog = {
+      title: 'It\'s ecosia',
+      author: 'Kevin',
+      url: 'https://www.ecosia.com',
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    const blogsAtEnd = await blogsInDb()
+    expect(blogsAtEnd).toHaveLength(blogsAtStart.length + 1)
+
+    const leastRecentlyAddedBlog = await Blog.findOne({ author: 'Kevin' })
+
+    expect(leastRecentlyAddedBlog.title).toBeDefined()
+    expect(leastRecentlyAddedBlog.author).toBeDefined()
+    expect(leastRecentlyAddedBlog.url).toBeDefined()
+    expect(leastRecentlyAddedBlog.likes).toBe(0)
+
+  })
+
+  test('can\'t add blog with missing author property', async () => {
+    const blogsAtStart = await blogsInDb()
+
+    const newBlog = {
+      title: 'It\'s ecosia',
+      url: 'https://www.ecosia.com',
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(400)
+      
+      const blogsAtEnd = await blogsInDb()
+    
+      expect(blogsAtEnd).toHaveLength(blogsAtStart.length)
+  })
+ 
+  test('can\'t add blog with missing url property', async () => {
+    const blogsAtStart = await blogsInDb()
+
+    const newBlog = {
+      title: 'It\'s ecosia',
+      author: 'Devin',
+      likes: 3
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(400)
+      
+      const blogsAtEnd = await blogsInDb()
+    
+      expect(blogsAtEnd).toHaveLength(blogsAtStart.length)
+  })
+
+  test('can\'t add blog with missing url and author property', async () => {
+    const blogsAtStart = await blogsInDb()
+
+    const newBlog = {
+      title: 'It\'s ecosia',
+      likes: 3
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(400)
+   
+
+    const blogsAtEnd = await blogsInDb()
+
+    expect(blogsAtEnd).toHaveLength(blogsAtStart.length)
+  })
+
+
 })
 
 describe('total likes', () => {
@@ -69,25 +217,25 @@ describe('total likes', () => {
     }
   ]
 
-  
+
 
   test('when list has only one blog, equals the likes of that', () => {
-    const result = listHelper.totalLikes(listWithOneBlog)
+    const result = helper.totalLikes(listWithOneBlog)
     expect(result).toBe(5)
   })
 
   test('multiple blogs, expecting 36 likes', () => {
-    const result = listHelper.totalLikes(blogs)
+    const result = helper.totalLikes(initialBlogs)
     expect(result).toBe(36)
   })
 })
 
 describe('favorite blog', () => {
-  
+
 
   test('expecting favorite blog to be { title: "Canonical string reduction", \
-  author: "Edsger W. Dijkstra", likes: 12 }', () =>{
-    const result = listHelper.favoriteBlog(blogs)
+  author: "Edsger W. Dijkstra", likes: 12 }', () => {
+    const result = helper.favoriteBlog(initialBlogs)
     expect(result).toEqual({
       title: "Canonical string reduction",
       author: "Edsger W. Dijkstra",
@@ -96,18 +244,17 @@ describe('favorite blog', () => {
   })
 
   test('expecting empty blog list to return null', () => {
-    const result = listHelper.favoriteBlog([])
+    const result = helper.favoriteBlog([])
     expect(result).toBe(null)
   })
 
 })
 
-
 describe('most blogs', () => {
-  
+
 
   test('expecting author with most blogs to be "Robert C. Martin"', () => {
-    const result = listHelper.mostBlogs(blogs)
+    const result = helper.mostBlogs(initialBlogs)
 
     expect(result).toEqual({
       author: "Robert C. Martin",
@@ -116,24 +263,29 @@ describe('most blogs', () => {
   })
 
   test('expecting empty blog list to return null', () => {
-    const result = listHelper.mostBlogs([])
+    const result = helper.mostBlogs([])
     expect(result).toBe(null)
   })
 
 })
 
 describe('most likes', () => {
-  
 
-  test('expecting author with most likes to be equal to  { author: "Edsger W.Dijkstra", likes: 17 }', () => {
-    const result = listHelper.mostLikes(blogs)
+
+  test('expecting author with most likes to be equal to { author: "Edsger W.Dijkstra", likes: 17 }', () => {
+    const result = helper.mostLikes(initialBlogs)
 
     expect(result).toEqual({ author: 'Edsger W. Dijkstra', likes: 17 })
   })
 
   test('expecting empty blog list to return null', () => {
-    const result = listHelper.mostLikes([])
+    const result = helper.mostLikes([])
     expect(result).toBe(null)
   })
 
+})
+
+
+afterAll(async () => {
+  await mongoose.connection.close()
 })
