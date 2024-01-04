@@ -1,5 +1,7 @@
 const _ = require('lodash')
 const Blog = require('../models/blog')
+const User = require('../models/user')
+
 const initialBlogs = [
   {
     title: "React patterns",
@@ -38,10 +40,28 @@ const initialBlogs = [
     likes: 2,
   }
 ]
+const initialUsers = [
+  {
+    username: "hellas",
+    name: "Artos Hellas",
+    passwordHash: "$2b$10$58epcrWRRD9/tBuEN8GmaO7zwPvnU9rD5226d3my8l3zupO8mmSYy"
+  },
+  {
+    username: "mluukkai",
+    name: "Matti Luukkainen",
+    passwordHash: "$2b$10$qRu8zxBH4Fg2OAAplrn/UegFAB9tiwwJhgqRmwKfpTBjK7paIkwuq"
+  },
+
+]
 
 const blogsInDb = async () => {
   const blogs = await Blog.find({})
   return blogs.map(blog => blog.toJSON())
+}
+
+const usersInDb = async () => {
+  const users = await User.find({})
+  return users.map(user => user.toJSON())
 }
 
 const nonExistingId = async () => {
@@ -110,5 +130,14 @@ const mostLikes = (blogs) => {
 }
 
 module.exports = {
-  dummy, totalLikes, favoriteBlog, mostBlogs, mostLikes, initialBlogs, blogsInDb, nonExistingId
+  dummy,
+  totalLikes,
+  favoriteBlog,
+  mostBlogs,
+  mostLikes,
+  initialBlogs,
+  initialUsers,
+  blogsInDb,
+  usersInDb,
+  nonExistingId,
 }

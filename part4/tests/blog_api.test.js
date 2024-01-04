@@ -5,6 +5,7 @@ const app = require('../app')
 const api = supertest(app)
 const Blog = require('../models/blog')
 
+
 const initialBlogs = helper.initialBlogs
 
 beforeEach(async () => {
@@ -213,7 +214,6 @@ describe('update tests', () => {
   })
 
   test('updating an nonexisting blog with valid id results in no change', async () => {
-    const blogsAtStart = await helper.blogsInDb()
 
     const nonExistingId = await helper.nonExistingId()
 
@@ -236,6 +236,36 @@ describe('update tests', () => {
     expect(blogToUpdate).toEqual(blogWithWrongField.body)
   })
 
+})
+
+describe('testing adding creator to blog', () => {
+  test('creating a blog adds a userid as creator', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+
+    const newBlog = {
+      title: 'It\'s ecosia',
+      author: 'Torben',
+      url: 'https://www.ecosia.com',
+      likes: 500000,
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    const blogsAtEnd = await helper.blogsInDb()
+    expect(blogsAtEnd).toHaveLength(blogsAtStart.length + 1)
+
+    const leastRecentlyAddedBlog = await Blog.findOne({ author: 'Torben' })
+
+    expect(leastRecentlyAddedBlog.title).toBeDefined()
+    expect(leastRecentlyAddedBlog.creator).toBeDefined()
+    expect(leastRecentlyAddedBlog.author).toBeDefined()
+    expect(leastRecentlyAddedBlog.url).toBeDefined()
+    expect(leastRecentlyAddedBlog.likes).toBeDefined()
+  })
 })
 
 afterAll(async () => {
