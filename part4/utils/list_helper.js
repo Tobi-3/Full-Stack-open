@@ -1,43 +1,50 @@
 const _ = require('lodash')
 const Blog = require('../models/blog')
 const User = require('../models/user')
+const mongoose = require('mongoose')
 
 const initialBlogs = [
   {
     title: "React patterns",
     author: "Michael Chan",
     url: "https://reactpatterns.com/",
-    likes: 7,
+    likes: 7
+    // creator: new mongoose.Types.ObjectId('65973505a8e30c37cb4c0e1c')
   },
   {
     title: "Go To Statement Considered Harmful",
     author: "Edsger W. Dijkstra",
     url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
-    likes: 5,
+    likes: 5
+    // creator: new mongoose.Types.ObjectId('65973505a8e30c37cb4c0e1c')
   },
   {
     title: "Canonical string reduction",
     author: "Edsger W. Dijkstra",
     url: "http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html",
-    likes: 12,
+    likes: 12
+    // creator: new mongoose.Types.ObjectId('65973505a8e30c37cb4c0e1c')
   },
   {
     title: "First class tests",
     author: "Robert C. Martin",
     url: "http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll",
-    likes: 10,
+    likes: 10
+    // creator: new mongoose.Types.ObjectId('65973505a8e30c37cb4c0e1c')
   },
   {
     title: "TDD harms architecture",
     author: "Robert C. Martin",
     url: "http://blog.cleancoder.com/uncle-bob/2017/03/03/TDD-Harms-Architecture.html",
-    likes: 0,
+    likes: 0
+    // creator: new mongoose.Types.ObjectId('65973505a8e30c37cb4c0e1c')
   },
   {
     title: "Type wars",
     author: "Robert C. Martin",
     url: "http://blog.cleancoder.com/uncle-bob/2016/05/01/TypeWars.html",
-    likes: 2,
+    likes: 2
+    // creator: new mongoose.Types.ObjectId('65973505a8e30c37cb4c0e1c')
   }
 ]
 const initialUsers = [
@@ -53,6 +60,17 @@ const initialUsers = [
   },
 
 ]
+const initialUsersLogin = [
+  {
+    username: "hellas",
+    password: "swordfish"
+  },
+  {
+    username: "mluukkai",
+    password: "salainen"
+  },
+
+]
 
 const blogsInDb = async () => {
   const blogs = await Blog.find({})
@@ -65,7 +83,13 @@ const usersInDb = async () => {
 }
 
 const nonExistingId = async () => {
-  const blog = new Blog({ title: 'to be removed', author: 'author', url: 'url', likes: 0 })
+  const blog = new Blog({
+    title: 'to be removed',
+    author: 'author',
+    url: 'url',
+    likes: 0,
+    creator: new mongoose.Types.ObjectId('65973505a8e30c37cb4c0e1c')
+  })
   await blog.save()
   await blog.deleteOne()
 
@@ -137,6 +161,7 @@ module.exports = {
   mostLikes,
   initialBlogs,
   initialUsers,
+  initialUsersLogin,
   blogsInDb,
   usersInDb,
   nonExistingId,

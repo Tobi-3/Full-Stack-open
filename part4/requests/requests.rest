@@ -1,12 +1,12 @@
 POST http://localhost:3003/api/blogs 
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1sdXVra2FpIiwiaWQiOiI2NTk2ZjYxMWJmN2I0ZWVlNmUzMzRjZjQiLCJpYXQiOjE3MDQzOTU1NzR9.RwPzGndzW3KLZyGIVDCP1uZkzpw7yFDILq29wGPnp_E
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1sdXVra2FpIiwiaWQiOiI2NTk2ZjYxMWJmN2I0ZWVlNmUzMzRjZjQiLCJpYXQiOjE3MDQzOTcxMjl9.E4eWijuBr8XpmflUMZip06AqyqMnRsUG7Amq9LN0qS0
 
 {
-  "title": "4th but with token",
+  "title": "yesnomaybe",
   "author": "unknown",
   "url": "www.memes.de",
-  "likes": 96
+  "likes": 2
 }
 
 ###
@@ -31,6 +31,14 @@ POST http://localhost:3003/api/login
 Content-Type: application/json
 
 {
-  "username": "mluukkai",
-  "password" : "salainen"
+  "username": "hellas",
+  "password" : "swordfish"
 }
+
+###
+DELETE http://localhost:3003/api/blogs/65970993fd25d2f5e8819978
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImhlbGxhcyIsImlkIjoiNjU5NmY2NTViZjdiNGVlZTZlMzM0Y2Y4IiwiaWF0IjoxNzA0NDAyNTc0fQ.EcGEYbz_aESwe6VSDdpOpER_1dWcifhiJAmyUE-By5o
+
+###
+DELETE http://localhost:3003/api/blogs/65970a018eaedb83205dfe2a
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1sdXVra2FpIiwiaWQiOiI2NTk2ZjYxMWJmN2I0ZWVlNmUzMzRjZjQiLCJpYXQiOjE3MDQzOTcxMjl9.E4eWijuBr8XpmflUMZip06AqyqMnRsUG7Amq9LN0qS0

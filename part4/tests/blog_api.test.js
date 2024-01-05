@@ -4,17 +4,34 @@ const supertest = require('supertest')
 const app = require('../app')
 const api = supertest(app)
 const Blog = require('../models/blog')
+const User = require('../models/user')
+
+let mluukkai //= 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1sdXVra2FpIiwiaWQiOiI2NTk3MzUwNWE4ZTMwYzM3Y2I0YzBlMWMiLCJpYXQiOjE3MDQ0MDg1NTh9.BzcDOE-nfTyADfhuDcC6mgazo-e2oeamVjvz66W_164'
+
+let hellas = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImhlbGxhcyIsImlkIjoiNjU5NzJiMjk5MTVlODgyZjZkNzlhZGVhIiwiaWF0IjoxNzA0NDA1ODAyfQ.NKILdqxXEkpZqXe8mrRiVqsPsmW5EfpJzCd4hLxCHjk'
 
 
 const initialBlogs = helper.initialBlogs
 
 beforeEach(async () => {
+  const userLogin = helper.initialUsersLogin[1]
+
+  const user = await api.post('/api/login')
+    .send(userLogin)
+
+  mluukkai = `Bearer ${user.body.token}`
   await Blog.deleteMany({})
-  await Blog.insertMany(initialBlogs)
+  // await Blog.insertMany(initialBlogs)
+  for (let blog of initialBlogs) {
+    await api
+      .post('/api/blogs')
+      .send(blog)
+      .set('Authorization', mluukkai)
+  }
 })
 
 
-describe('blog list tests (4.9 - 4.12)', () => {
+describe('blog list tests (4.9 - 4.12) (fixed)', () => {
 
   test('returns amount of blogs', async () => {
     const blogs = await helper.blogsInDb()
@@ -40,6 +57,7 @@ describe('blog list tests (4.9 - 4.12)', () => {
     await api
       .post('/api/blogs')
       .send(newBlog)
+      .set('Authorization', mluukkai)
       .expect(201)
       .expect('Content-Type', /application\/json/)
 
@@ -52,6 +70,7 @@ describe('blog list tests (4.9 - 4.12)', () => {
     expect(leastRecentlyAddedBlog.author).toBeDefined()
     expect(leastRecentlyAddedBlog.url).toBeDefined()
     expect(leastRecentlyAddedBlog.likes).toBeDefined()
+    expect(leastRecentlyAddedBlog.creator).toBeDefined()
 
   })
 
@@ -66,6 +85,7 @@ describe('blog list tests (4.9 - 4.12)', () => {
     await api
       .post('/api/blogs')
       .send(newBlog)
+      .set('Authorization', mluukkai)
       .expect(201)
       .expect('Content-Type', /application\/json/)
 
@@ -77,6 +97,7 @@ describe('blog list tests (4.9 - 4.12)', () => {
     expect(leastRecentlyAddedBlog.title).toBeDefined()
     expect(leastRecentlyAddedBlog.author).toBeDefined()
     expect(leastRecentlyAddedBlog.url).toBeDefined()
+    expect(leastRecentlyAddedBlog.creator).toBeDefined()
     expect(leastRecentlyAddedBlog.likes).toBe(0)
 
   })
@@ -92,6 +113,7 @@ describe('blog list tests (4.9 - 4.12)', () => {
     await api
       .post('/api/blogs')
       .send(newBlog)
+      .set('Authorization', mluukkai)
       .expect(400)
 
     const blogsAtEnd = await helper.blogsInDb()
@@ -111,6 +133,7 @@ describe('blog list tests (4.9 - 4.12)', () => {
     await api
       .post('/api/blogs')
       .send(newBlog)
+      .set('Authorization', mluukkai)
       .expect(400)
 
     const blogsAtEnd = await helper.blogsInDb()
@@ -128,6 +151,7 @@ describe('blog list tests (4.9 - 4.12)', () => {
 
     await api
       .post('/api/blogs')
+      .set('Authorization', mluukkai)
       .send(newBlog)
       .expect(400)
 
@@ -142,16 +166,21 @@ describe('blog list tests (4.9 - 4.12)', () => {
 
 describe('deletion tests', () => {
 
-  test('deleting a Blog succeds with status 204 if id is valid', async () => {
+  test('deleting a Blog succeds with status 204 if id and token valid and correct user ', async () => {
     const blogsAtStart = await helper.blogsInDb()
-
     const blogToDelete = blogsAtStart[0]
+    const userAtStart = await User.findById(blogToDelete.creator).select('blogs')
+
     deletedBlog = await api
       .delete(`/api/blogs/${blogToDelete.id}`)
+      .set('Authorization', mluukkai)
       .expect(204)
 
     const blogsAtEnd = await helper.blogsInDb()
+    const userBlogsAtEnd = await User.findById(blogToDelete.creator).select('blogs')
+
     expect(blogsAtStart).toHaveLength(blogsAtEnd.length + 1)
+    expect(userAtStart.blogs).toHaveLength(userBlogsAtEnd.blogs.length + 1)
     expect(blogsAtEnd.find(b => b.id === deletedBlog.id)).toBeUndefined()
   })
 
@@ -162,6 +191,7 @@ describe('deletion tests', () => {
 
     await api
       .delete(`/api/blogs/${invalidId}`)
+      .set('Authorization', mluukkai)
       .expect(400)
 
     const blogsAtEnd = await helper.blogsInDb()
@@ -176,7 +206,8 @@ describe('deletion tests', () => {
 
     await api
       .delete(`/api/blogs/${nonExistingId}`)
-      .expect(204)
+      .set('Authorization', mluukkai)
+      .expect(400)
 
     const blogsAtEnd = await helper.blogsInDb()
 
@@ -187,7 +218,7 @@ describe('deletion tests', () => {
 })
 
 describe('update tests', () => {
-  test('updating a Blog succeds with status 200 if id is valid', async () => {
+  test('updating a Blog without authorization fails with status 401 if no token provided', async () => {
     const blogsAtStart = await helper.blogsInDb()
     const blogToUpdate = blogsAtStart[0]
 
@@ -195,6 +226,32 @@ describe('update tests', () => {
 
     const updatedBlog = await api
       .put(`/api/blogs/${blogToUpdate.id}`)
+      .send(updatedBlogfield)
+      .expect(401)
+  })
+
+  test('updating a Blog from different user fails with status 401', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+    const blogToUpdate = blogsAtStart[0]
+
+    const updatedBlogfield = { likes: -10 }
+
+    const updatedBlog = await api
+      .put(`/api/blogs/${blogToUpdate.id}`)
+      .set('Authorization', hellas)
+      .send(updatedBlogfield)
+      .expect(401)
+  })
+
+  test('updating a Blog succeds with status 200 if id is valid and user created blog', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+    const blogToUpdate = blogsAtStart[0]
+
+    const updatedBlogfield = { likes: -10 }
+
+    const updatedBlog = await api
+      .put(`/api/blogs/${blogToUpdate.id}`)
+      .set('Authorization', mluukkai)
       .send(updatedBlogfield)
       .expect(200)
       .expect('Content-Type', /application\/json/)
@@ -209,20 +266,19 @@ describe('update tests', () => {
 
     await api
       .put(`/api/blogs/${invalidId}`)
+      .set('Authorization', mluukkai)
       .send({ likes: -10 })
       .expect(400)
   })
 
-  test('updating an nonexisting blog with valid id results in no change', async () => {
+  test('updating an nonexisting blog with valid id results in status 400', async () => {
 
     const nonExistingId = await helper.nonExistingId()
 
     const nonExistingBlog = await api
       .put(`/api/blogs/${nonExistingId}`, { author: 'edgar allan poe' })
-      .expect(200)
-
-    expect(nonExistingBlog.body).toBeNull()
-
+      .set('Authorization', mluukkai)
+      .expect(400)
   })
 
   test('updating a nonexisting field doesn\'t change blog', async () => {
@@ -231,9 +287,10 @@ describe('update tests', () => {
 
     const blogWithWrongField = await api
       .put(`/api/blogs/${blogToUpdate.id}`, { wrongfield: 'wrong' })
+      .set('Authorization', mluukkai)
       .expect(200)
 
-    expect(blogToUpdate).toEqual(blogWithWrongField.body)
+    expect(blogToUpdate).toEqual(new Blog(blogWithWrongField.body).toJSON())
   })
 
 })
@@ -252,6 +309,7 @@ describe('testing adding creator to blog', () => {
     await api
       .post('/api/blogs')
       .send(newBlog)
+      .set('Authorization', mluukkai)
       .expect(201)
       .expect('Content-Type', /application\/json/)
 

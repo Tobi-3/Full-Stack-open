@@ -8,10 +8,10 @@ const User = require('../models/user')
 
 const initialUsers = helper.initialUsers
 
-beforeEach(async () => {
-  await User.deleteMany({})
-  await User.insertMany(initialUsers)
-})
+// beforeEach(async () => {
+//   await User.deleteMany({})
+//   await User.insertMany(initialUsers)
+// })
 
 describe('user tests', () => {
   test('returns status 400 if password is to short', async () => {

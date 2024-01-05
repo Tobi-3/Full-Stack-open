@@ -30,7 +30,10 @@ blogsRouter.post('/', async (request, response, next) => {
 
 blogsRouter.delete('/:id', async (request, response, next) => {
   const blog = await Blog.findById(request.params.id)
-
+  
+  if(!blog) {
+    return response.status(400).json({ error: 'a blog with this id does not exist'})
+  }
   if (!request.token) {
     return response.status(400).json({ error: 'token required for deletion' })
   }
@@ -59,11 +62,37 @@ blogsRouter.delete('/:id', async (request, response, next) => {
 })
 
 blogsRouter.put('/:id', async (request, response, next) => {
-  const blog = request.body
+  const blog = await Blog.findById(request.params.id)
 
-  const updatedBlog = await Blog
-    .findByIdAndUpdate(request.params.id, blog, { new: true, $exists: true })
-  response.json(updatedBlog)
+  if (!blog) {
+    return response.status(400).json({ error: 'a blog with this id does not exist' })
+  }
+
+  if (!request.token) {
+    return response.status(400).json({ error: 'token required for update' })
+  }
+  
+  const decodedToken = jwt.verify(request.token, process.env.SECRET)
+  if (!decodedToken) {
+    return response.status(401).json({ error: 'invalid token' })
+  }
+
+  const updatedData = request.body
+  const user = request.user
+
+  if (user && user._id.toString() === blog.creator.toString()) {
+    const updatedBlog = await Blog
+      .findByIdAndUpdate(request.params.id, updatedData, { new: true, $exists: true })
+    response.json(updatedBlog)
+
+    return response.status(204).end()
+  }
+
+  return response.status(401).json({
+    error: 'only user who created blog can update'
+  })
+  
+
 })
 
 module.exports = blogsRouter
