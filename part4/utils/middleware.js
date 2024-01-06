@@ -34,26 +34,30 @@ const errorHandler = (error, request, response, next) => {
   next(error)
 }
 
-const tokenExtractor = (request, response, next) => {
+const getTokenFrom = request => {
   const authz = request.get('authorization')
-
-  request.token = (authz && authz.startsWith('Bearer'))
-    ? authz.replace('Bearer ', '')
+  const token = (authz && authz.toLowerCase().startsWith('Bearer'))
+    ? authz.replace('bearer ', '')
     : null
+  return token
+}
+const tokenExtractor = (request, response, next) => {
+
+  request.token = getTokenFrom(request)
 
   next()
 
 }
 
 const userExtractor = async (request, response, next) => {
-  const authz = request.get('authorization')
-  request.token = (authz && authz.startsWith('Bearer'))
-    ? authz.replace('Bearer ', '')
-    : null
+  const token = getTokenFrom(request)
 
-  const decodedToken = jwt.verify(request.token, process.env.SECRET)
-  request.user = await User.findById(decodedToken.id)
-
+  if (!token) {
+    request.user = null
+  } else {
+    const decodedToken = jwt.verify(token, process.env.SECRET)
+    request.user = await User.findById(decodedToken.id)
+  }
 
   next()
 }
