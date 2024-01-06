@@ -36,9 +36,10 @@ const errorHandler = (error, request, response, next) => {
 
 const getTokenFrom = request => {
   const authz = request.get('authorization')
-  const token = (authz && authz.toLowerCase().startsWith('Bearer'))
+  const token = (authz && authz.toLowerCase().startsWith('bearer'))
     ? authz.replace('bearer ', '')
     : null
+
   return token
 }
 const tokenExtractor = (request, response, next) => {
