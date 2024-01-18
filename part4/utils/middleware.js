@@ -36,10 +36,9 @@ const errorHandler = (error, request, response, next) => {
 
 const getTokenFrom = request => {
   const authz = request.get('authorization')
-  const token = (authz && authz.toLowerCase().startsWith('bearer'))
-    ? authz.replace('bearer ', '')
+  const token = authz
+    ? authz.replace(/^[Bb]earer\s/, '')
     : null
-
   return token
 }
 const tokenExtractor = (request, response, next) => {
@@ -56,7 +55,14 @@ const userExtractor = async (request, response, next) => {
   if (!token) {
     request.user = null
   } else {
+
     const decodedToken = jwt.verify(token, process.env.SECRET)
+
+    if (!decodedToken) {
+      logger.info("decoded", decodedToken)
+      return response.status(401).json({ error: 'invalid token' })
+    }
+
     request.user = await User.findById(decodedToken.id)
   }
 

@@ -6,9 +6,9 @@ const api = supertest(app)
 const Blog = require('../models/blog')
 const User = require('../models/user')
 
-let mluukkai //= 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1sdXVra2FpIiwiaWQiOiI2NTk3MzUwNWE4ZTMwYzM3Y2I0YzBlMWMiLCJpYXQiOjE3MDQ0MDg1NTh9.BzcDOE-nfTyADfhuDcC6mgazo-e2oeamVjvz66W_164'
+let mluukkai //= 'bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1sdXVra2FpIiwiaWQiOiI2NTk3MzUwNWE4ZTMwYzM3Y2I0YzBlMWMiLCJpYXQiOjE3MDQ0MDg1NTh9.BzcDOE-nfTyADfhuDcC6mgazo-e2oeamVjvz66W_164'
 
-let hellas = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImhlbGxhcyIsImlkIjoiNjU5NzJiMjk5MTVlODgyZjZkNzlhZGVhIiwiaWF0IjoxNzA0NDA1ODAyfQ.NKILdqxXEkpZqXe8mrRiVqsPsmW5EfpJzCd4hLxCHjk'
+let hellas = 'bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImhlbGxhcyIsImlkIjoiNjU5NzJiMjk5MTVlODgyZjZkNzlhZGVhIiwiaWF0IjoxNzA0NDA1ODAyfQ.NKILdqxXEkpZqXe8mrRiVqsPsmW5EfpJzCd4hLxCHjk'
 
 
 const initialBlogs = helper.initialBlogs
@@ -19,14 +19,14 @@ beforeEach(async () => {
   const user = await api.post('/api/login')
     .send(userLogin)
 
-  mluukkai = `Bearer ${user.body.token}`
+  mluukkai = `bearer ${user.body.token}`
   await Blog.deleteMany({})
   // await Blog.insertMany(initialBlogs)
   for (let blog of initialBlogs) {
     await api
       .post('/api/blogs')
-      .send(blog)
       .set('Authorization', mluukkai)
+      .send(blog)
   }
 })
 
@@ -53,7 +53,7 @@ describe('blog list tests (4.9 - 4.12) (fixed)', () => {
       url: 'https://www.ecosia.com',
       likes: 500000,
     }
-
+    
     await api
       .post('/api/blogs')
       .send(newBlog)
