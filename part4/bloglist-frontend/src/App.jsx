@@ -18,7 +18,7 @@ const App = () => {
     setNotification({ message, err })
     setTimeout(() => {
       setNotification(null)
-    }, timeout);
+    }, timeout)
   }
 
   useEffect(() => {
@@ -86,14 +86,14 @@ const App = () => {
   }
 
   const deleteBlog = async (blogId) => {
-    try {      
+    try {
       await blogService.remove(blogId)
-      
+
       setBlogs(blogs.filter(b => b.id !== blogId))
       setNotificationWithTimeout('deleted blog')
 
     } catch (error) {
-      console.log("errror", error)
+      console.log('errror', error)
       setNotificationWithTimeout(error.response.data.error, true)
     }
   }
@@ -119,7 +119,7 @@ const App = () => {
       <p>Logged in as {user.username} <button onClick={handleLogout}>logout</button></p>
       {blogForm()}
       {blogs.map(blog =>
-        <Blog key={blog.id} blog={blog} updateBlog={updateBlog} deleteBlog={deleteBlog} userId={user.id}/>
+        <Blog key={blog.id} blog={blog} updateBlog={updateBlog} deleteBlog={deleteBlog} userId={user.id} />
       )}
 
     </>
