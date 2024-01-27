@@ -12,9 +12,10 @@ const Blog = ({ blog, updateBlog, deleteBlog, userId }) => {
   }
   const removeStyle = { backgroundColor: 'rgb(100, 180, 255)' }
   const toggleVisibility = () => setHideBlog(!hideBlog)
-  const handleLike = () => {
-    const updatedLikes = isLiked ? blog.likes - 1 : blog.likes + 1
+  const handleLike = (event) => {
+    event.preventDefault()
 
+    const updatedLikes = isLiked ? blog.likes - 1 : blog.likes + 1
     updateBlog({ ...blog, likes: updatedLikes })
 
     //allow unlimited likes for now
@@ -29,14 +30,13 @@ const Blog = ({ blog, updateBlog, deleteBlog, userId }) => {
 
   return (
     <div style={style}>
-      <div> {blog.title} <button onClick={toggleVisibility}>{hideBlog ? 'view' : 'hide'}</button></div >
+      <div id='titleAuthor'> {blog.title} {blog.author} <button id='toggleVisibilityButton' onClick={toggleVisibility}>{hideBlog ? 'view' : 'hide'}</button></div >
       {
         hideBlog
           ? <></>
           : <>
-            <div>{blog.author}</div>
             <a href={blog.url}>{blog.url}</a>
-            <div>likes: {blog.likes} <button onClick={handleLike}>{isLiked ? 'unlike' : 'like'}</button> </div>
+            <div>likes: {blog.likes} <button id='likeButton' onClick={handleLike}>{isLiked ? 'unlike' : 'like'}</button> </div>
             <div>{blog.creator.name}</div>
           </>
       }
