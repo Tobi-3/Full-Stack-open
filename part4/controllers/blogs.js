@@ -40,11 +40,11 @@ blogsRouter.delete('/:id', async (request, response, next) => {
 
   if (user && user._id.toString() === blog.creator.toString()) {
     const deletedBlog = await Blog.findByIdAndDelete(request.params.id)
-    
+
     user.blogs = user.blogs
-    .filter(blogId => blogId.toString() !== deletedBlog._id.toString())
+      .filter(blogId => blogId.toString() !== deletedBlog._id.toString())
     await user.save()
-    
+
     return response.status(204).end()
   }
 
@@ -52,6 +52,20 @@ blogsRouter.delete('/:id', async (request, response, next) => {
     error: 'only user who created blog can delete'
   })
 
+})
+
+blogsRouter.put('/:id/likes', async (request, response, next) => {
+  const blog = await Blog.findById(request.params.id)
+
+  const updatedData = { likes: request.body.likes }
+
+  const updatedBlog = await Blog
+    .findByIdAndUpdate(request.params.id, updatedData, { new: true, $exists: true })
+  const populatedBlog = await updatedBlog.populate('creator', { username: 1, name: 1 })
+
+  response.json(populatedBlog)
+
+  return response.status(204).end()
 })
 
 blogsRouter.put('/:id', async (request, response, next) => {
@@ -64,14 +78,14 @@ blogsRouter.put('/:id', async (request, response, next) => {
   if (!blog) {
     return response.status(400).json({ error: 'a blog with this id does not exist' })
   }
-  
+
   const updatedData = { ...request.body, creator: blog.creator }
   const user = request.user
 
   if (user && user._id.toString() === blog.creator.toString()) {
     const updatedBlog = await Blog
       .findByIdAndUpdate(request.params.id, updatedData, { new: true, $exists: true })
-    const populatedBlog = await updatedBlog.populate('creator', { username: 1, name: 1 } )
+    const populatedBlog = await updatedBlog.populate('creator', { username: 1, name: 1 })
 
     response.json(populatedBlog)
 

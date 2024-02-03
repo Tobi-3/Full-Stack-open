@@ -43,7 +43,7 @@ const App = () => {
 
       window.localStorage.setItem('loggedBlogappUser', JSON.stringify(user))
       setUser(user)
-
+      blogService.setToken(user.token)
     } catch (error) {
       setNotificationWithTimeout(error.response.data.error, true)
     }
@@ -76,6 +76,18 @@ const App = () => {
   const updateBlog = async (blogObject) => {
     try {
       const updatedBlog = await blogService.update(blogObject)
+      setBlogs([...blogs]
+        .map(b => b.id === updatedBlog.id ? updatedBlog : b)
+        .sort((a, b) => { return b.likes - a.likes }))
+
+    } catch (error) {
+      setNotificationWithTimeout(error.response.data.error, true)
+    }
+  }
+
+  const likeBlog = async (blogObject) => {
+    try {
+      const updatedBlog = await blogService.like(blogObject)
       setBlogs([...blogs]
         .map(b => b.id === updatedBlog.id ? updatedBlog : b)
         .sort((a, b) => { return b.likes - a.likes }))
@@ -118,10 +130,11 @@ const App = () => {
       <Notification notification={notification} />
       <p>Logged in as {user.username} <button onClick={handleLogout}>logout</button></p>
       {blogForm()}
-      {blogs.map(blog =>
-        <Blog key={blog.id} blog={blog} updateBlog={updateBlog} deleteBlog={deleteBlog} userId={user.id} />
-      )}
-
+      <div id="blogs">
+        {blogs.map(blog =>
+          <Blog key={blog.id} blog={blog} likeBlog={likeBlog} deleteBlog={deleteBlog} userId={user.id} />
+        )}
+      </div>
     </>
   )
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import PropTypes from 'prop-types'
 
-const Blog = ({ blog, updateBlog, deleteBlog, userId }) => {
+const Blog = ({ blog, likeBlog, deleteBlog, userId }) => {
   const [hideBlog, setHideBlog] = useState(true)
   const [isLiked, setIsLiked] = useState(false)
   const style = {
@@ -16,7 +16,7 @@ const Blog = ({ blog, updateBlog, deleteBlog, userId }) => {
     event.preventDefault()
 
     const updatedLikes = isLiked ? blog.likes - 1 : blog.likes + 1
-    updateBlog({ ...blog, likes: updatedLikes })
+    likeBlog({ ...blog, likes: updatedLikes })
 
     //allow unlimited likes for now
     // setIsLiked(!isLiked)
@@ -48,7 +48,7 @@ const Blog = ({ blog, updateBlog, deleteBlog, userId }) => {
 
 Blog.propTypes = {
   blog: PropTypes.object.isRequired,
-  updateBlog: PropTypes.func.isRequired,
+  likeBlog: PropTypes.func.isRequired,
   deleteBlog: PropTypes.func.isRequired,
   userId: PropTypes.string.isRequired
 }
