@@ -1,5 +1,6 @@
 import { useSelector, useDispatch } from 'react-redux'
-import { vote } from '../reducers/reducer'
+import { vote } from '../reducers/anecdoteReducer'
+import { filterChange } from '../reducers/filterReducer'
 
 const Anecdote = ({ anecdote, handleClick }) => {
   return (
@@ -18,8 +19,10 @@ const Anecdote = ({ anecdote, handleClick }) => {
 
 const AnecdoteList = () => {
 
-  const anecdotes = useSelector(state => state)
   const dispatch = useDispatch()
+  const anecdotes = useSelector(({anecdotes, filter}) => {
+    return anecdotes.filter(anecdote => anecdote.content.includes(filter))
+  })
 
   return (
     <>
