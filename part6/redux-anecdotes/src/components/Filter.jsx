@@ -6,7 +6,6 @@ const Filter = () => {
 
   const handleChange = (event) => {
     // input-field value is in variable event.target.value
-    console.log("target",event.target.value)
     dispatch(filterChange(event.target.value))
   }
   const style = {
@@ -15,7 +14,7 @@ const Filter = () => {
 
   return (
     <div style={style}>
-      filter <input name="filter" onChange={handleChange} />
+      filter <input onChange={handleChange} />
     </div>
   )
 }
